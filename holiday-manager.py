@@ -50,9 +50,20 @@ class Holiday:
     def __iter__(self):
         return iter(self.name)
 
-@dataclass
 class HolidayList:
-    inner_holidays: list
+    def __init__(self):
+       self.inner_holidays = []
+
+    def add_holiday(self, holiday_obj):
+        self.inner_holidays.append(holiday_obj)
+
+    def remove_holiday(self, holiday_obj):
+        self.inner_holidays.remove(holiday_obj)
+
+    def size_holiday(self):
+        print(f'There are {len(self.inner_holidays)} holidays stored in the system.')
+
+total_holidays = HolidayList()
 
 # Web Scraping:
 
@@ -66,7 +77,7 @@ def get_html(res):
 
 for holiday in json_holidays['holidays']:
     holiday_object = Holiday(name = holiday['name'], date = holiday['date'])
-    holidays.append(holiday_object)
+    total_holidays.add_holiday(holiday_object)
 
 for url in urls:
     year = 2020 + urls.index(url)
@@ -89,13 +100,13 @@ for url in urls:
                 holiday_date = f'{year},{month_to_num[holiday_date_place[0]]},0{holiday_date_place[1]}'
             holiday_name = holiday.find_all('td')[1].find('a').string
             holiday_object = Holiday(name = holiday_name, date = holiday_date)
-            holidays.append(holiday_object)
+            total_holidays.add_holiday(holiday_object)
 
 # Application Start:
 
 print('\nHoliday Management')
 print(separator)
-print(f'There are {len(holidays)} holidays stored in the system')
+total_holidays.size_holiday()
 
 menu = False
 while not menu:
@@ -113,7 +124,7 @@ while not menu:
                 added_date = input('Date (year,month,day): ')
                 #if isinstance(added_date, date):
                 holiday_object = Holiday(name = added_holiday, date = added_date)
-                holidays.append(holiday_object)
+                total_holidays.add_holiday(holiday_object)
                 saved = False
                 print(f'\nSuccess:\n{added_holiday} ({added_date}) has been added to the holiday list.')
                 adding = True
