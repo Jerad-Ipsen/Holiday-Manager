@@ -44,24 +44,54 @@ years = [2020, 2021, 2022, 2023, 2024]
 @dataclass
 class Holiday:
     name: str
-    date: date
+    date: datetime
     #weather: str
 
     def __iter__(self):
         return iter(self.name)
 
 class HolidayList:
+
     def __init__(self):
        self.inner_holidays = []
+       self.dateformat = '%Y-%m-%d'
 
     def add_holiday(self, holiday_obj):
-        self.inner_holidays.append(holiday_obj)
+        new_date = holiday_obj.date.strftime(self.dateformat)
+        a_holiday = self.findHoliday(holiday_obj.name, new_date)
+        if type(a_holiday) == Holiday:
+            print('\nThis holiday already exists')
+        else:
+            print(f'\nSuccess:\n{added_holiday} ({added_date}) has been added to the holiday list.')
+            #not changing these when addibg in program
+            saved == False
+            adding == True
+            self.inner_holidays.append(holiday_obj)
+
+    def add_scraped_holiday(self, holiday_obj):
+        new_date = holiday_obj.date.strftime(self.dateformat)
+        a_holiday = self.findHoliday(holiday_obj.name, new_date)
+        if type(a_holiday) != Holiday:
+            self.inner_holidays.append(holiday_obj)
 
     def remove_holiday(self, holiday_obj):
-        self.inner_holidays.remove(holiday_obj)
+        new_date = holiday_obj.date.strftime(self.dateformat)
+        a_holiday = self.findHoliday(holiday_obj.name, new_date)
+        if type(a_holiday) == Holiday:
+            print('\nHoliday successfully removed')
+            self.inner_holidays.remove(holiday_obj)
+            removing == True
+            saved == False
+        else:
+            print('\nNo such holiday exists')
 
     def size_holiday(self):
         print(f'There are {len(self.inner_holidays)} holidays stored in the system.')
+
+    def findHoliday(self, HolidayName, HolidayDate):
+        for a_holiday in self.inner_holidays:
+            if HolidayName == a_holiday.name and a_holiday.date.strftime(self.dateformat) == HolidayDate:
+                return a_holiday
 
 total_holidays = HolidayList()
 
@@ -76,8 +106,9 @@ def get_html(res):
     return res.text
 
 for holiday in json_holidays['holidays']:
-    holiday_object = Holiday(name = holiday['name'], date = holiday['date'])
-    total_holidays.add_holiday(holiday_object)
+    new_date = holiday['date']
+    holiday_object = Holiday(holiday['name'], datetime.datetime.strptime(new_date, '%Y-%m-%d'))
+    total_holidays.add_scraped_holiday(holiday_object)
 
 for url in urls:
     year = 2020 + urls.index(url)
@@ -95,12 +126,12 @@ for url in urls:
             holiday_date_place = holiday.find('th').string
             holiday_date_place = holiday_date_place.split(' ')
             if len(holiday_date_place[1]) == 2:
-                holiday_date = f'{year},{month_to_num[holiday_date_place[0]]},{holiday_date_place[1]}'
+                holiday_date = f'{year}-{month_to_num[holiday_date_place[0]]}-{holiday_date_place[1]}'
             else:
-                holiday_date = f'{year},{month_to_num[holiday_date_place[0]]},0{holiday_date_place[1]}'
+                holiday_date = f'{year}-{month_to_num[holiday_date_place[0]]}-0{holiday_date_place[1]}'
             holiday_name = holiday.find_all('td')[1].find('a').string
-            holiday_object = Holiday(name = holiday_name, date = holiday_date)
-            total_holidays.add_holiday(holiday_object)
+            holiday_object = Holiday(holiday_name, datetime.datetime.strptime(holiday_date, '%Y-%m-%d'))
+            total_holidays.add_scraped_holiday(holiday_object)
 
 # Application Start:
 
@@ -121,31 +152,22 @@ while not menu:
             while not adding:
                 # Checking for a valid date does not work as intended
                 added_holiday = input('Holiday: ')
-                added_date = input('Date (year,month,day): ')
-                #if isinstance(added_date, date):
-                holiday_object = Holiday(name = added_holiday, date = added_date)
+                added_date = input('Date (year-month-day): ')
+                holiday_object = Holiday(added_holiday, datetime.datetime.strptime(added_date, '%Y-%m-%d'))
                 total_holidays.add_holiday(holiday_object)
-                saved = False
-                print(f'\nSuccess:\n{added_holiday} ({added_date}) has been added to the holiday list.')
-                adding = True
-                #else:
-                    #print('Error:\nInvalid date. Please try again.')
+                # saved = False
+                # adding = True
         elif selection == 2:
             print(f'\nRemove a Holiday\n{separator}')
             finished = False
             removing = False
             while not removing:
                 removed_holiday = input('Holiday: ')
-                for i, day in enumerate(holidays):
-                    if day.name == removed_holiday:
-                        del holidays[i]
-                        print(f'\nSuccess:\n{removed_holiday} has been removed from the holiday list.')
-                        finished = True
-                        saved = False
-                        removing = True
-                break
-            if not finished:
-                print(f'\nError:\n{removed_holiday} not found.')
+                removed_date = input('Date (year-month-day): ')
+                holiday_object = Holiday(removed_holiday, datetime.datetime.strptime(removed_date, '%Y-%m-%d'))
+                total_holidays.remove_holiday(holiday_object)
+                # saved = False
+                # removing = True
         elif selection == 3:
             print(f'\nSaving Holiday List\n{separator}')
             saving = False
